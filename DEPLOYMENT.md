@@ -7,8 +7,8 @@
 3. Add these variables in Project Settings for Production, Preview, and Development:
 
 ```text
-VITE_SUPABASE_URL=https://rfhepvqhcmpznzrvszng.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
+VITE_SUPABASE_URL=https://xzrcywybufifjxhjxcqt.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_LYe_2DZo47wABxIWYByHkg_pQSt7494
 VITE_ADMIN_ID=your-admin-id
 VITE_ADMIN_PASSWORD=your-admin-password
 ```

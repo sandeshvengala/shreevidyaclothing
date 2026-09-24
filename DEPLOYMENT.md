@@ -1,3 +1,11 @@
+
+## Supabase database setup
+
+Run `supabase/schema.sql` in the Supabase SQL Editor. It creates the online `products` and `offer_campaigns` tables, enables RLS, and grants public reads plus authenticated writes.
+
+The storefront no longer reads products, offers, cart data, or wishlist data from browser `localStorage`. Existing browser keys are removed once when the app loads.
+
+The current admin ID/password screen is a frontend gate. For database writes, the admin must also have an authenticated Supabase session; never grant anonymous users write access with the publishable key.
 # Deployment
 
 ## Vercel

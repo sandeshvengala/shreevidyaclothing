@@ -1,13 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { products as initialProducts, type Product } from './products';
+import type { Product } from './products';
 import { defaultOfferCampaign, type OfferCampaign } from './OfferCampaign';
 import { supabase } from '../lib/supabase';
-
-const STORAGE_KEY = 'shree-vidya-products';
-const CAMPAIGN_STORAGE_KEY = 'shree-vidya-offer-campaign';
-const USER_STORAGE_KEY = 'shree-vidya-user';
-const CART_STORAGE_KEY = 'shree-vidya-cart';
-const WISHLIST_STORAGE_KEY = 'shree-vidya-wishlist';
 
 export type StoreUser = { name: string; email: string; phone?: string; address?: Address };
 export type Address = { fullName: string; phone: string; address: string; city: string; state: string; postalCode: string; country: string };
@@ -15,12 +9,12 @@ export type CartItem = { product: Product; quantity: number };
 
 type ProductContextValue = {
   products: Product[];
-  saveProduct: (product: Product) => void;
-  deleteProduct: (id: number) => void;
-  resetProducts: () => void;
+  saveProduct: (product: Product) => Promise<void>;
+  deleteProduct: (id: number) => Promise<void>;
+  resetProducts: () => Promise<void>;
   campaign: OfferCampaign;
-  saveCampaign: (campaign: OfferCampaign) => void;
-  resetCampaign: () => void;
+  saveCampaign: (campaign: OfferCampaign) => Promise<void>;
+  resetCampaign: () => Promise<void>;
   user: StoreUser | null;
   login: (email: string, password: string) => Promise<{ error?: string }>;
   signInWithGoogle: (redirectPath?: string) => Promise<{ error?: string }>;
@@ -38,62 +32,100 @@ type ProductContextValue = {
 
 const ProductContext = createContext<ProductContextValue | null>(null);
 
-function readProducts(): Product[] {
-  if (typeof window === 'undefined') return initialProducts;
-
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : initialProducts;
-  } catch {
-    return initialProducts;
-  }
+function mapProductRow(value: Record<string, unknown>): Product {
+  return {
+    id: Number(value.id),
+    slug: String(value.slug ?? ''),
+    name: String(value.name ?? ''),
+    category: String(value.category ?? ''),
+    collection: String(value.collection ?? ''),
+    price: Number(value.price ?? 0),
+    compareAtPrice: value.compare_at_price == null ? undefined : Number(value.compare_at_price),
+    discountPercent: value.discount_percent == null ? undefined : Number(value.discount_percent),
+    fabric: String(value.fabric ?? ''),
+    color: String(value.color ?? ''),
+    occasion: String(value.occasion ?? ''),
+    image: String(value.image ?? ''),
+    imageAlt: String(value.image_alt ?? ''),
+    hoverImage: value.hover_image == null ? undefined : String(value.hover_image),
+    featured: Boolean(value.featured),
+    newArrival: Boolean(value.new_arrival),
+    bestSeller: Boolean(value.best_seller),
+    badge: value.badge as Product['badge'],
+    rating: Number(value.rating ?? 0),
+    reviews: Number(value.reviews ?? 0),
+    description: String(value.description ?? ''),
+  };
 }
 
-function readCampaign(): OfferCampaign {
-  if (typeof window === 'undefined') return defaultOfferCampaign;
-
-  try {
-    const stored = window.localStorage.getItem(CAMPAIGN_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : defaultOfferCampaign;
-  } catch {
-    return defaultOfferCampaign;
-  }
+function productToRow(product: Product) {
+  return {
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    category: product.category,
+    collection: product.collection,
+    price: product.price,
+    compare_at_price: product.compareAtPrice ?? null,
+    discount_percent: product.discountPercent ?? null,
+    fabric: product.fabric,
+    color: product.color,
+    occasion: product.occasion,
+    image: product.image,
+    image_alt: product.imageAlt,
+    hover_image: product.hoverImage ?? null,
+    featured: product.featured ?? false,
+    new_arrival: product.newArrival ?? false,
+    best_seller: product.bestSeller ?? false,
+    badge: product.badge ?? null,
+    rating: product.rating,
+    reviews: product.reviews,
+    description: product.description,
+  };
 }
 
-function readStorage<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') return fallback;
-  try {
-    const stored = window.localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : fallback;
-  } catch {
-    return fallback;
-  }
+function mapCampaignRow(value: Record<string, unknown>): OfferCampaign {
+  return {
+    enabled: Boolean(value.enabled),
+    eyebrow: String(value.eyebrow ?? ''),
+    title: String(value.title ?? ''),
+    description: String(value.description ?? ''),
+    buttonLabel: String(value.button_label ?? ''),
+    startAt: String(value.start_at ?? ''),
+    endAt: String(value.end_at ?? ''),
+  };
 }
 
-function isProduct(value: unknown): value is Product {
+function campaignToRow(campaignValue: OfferCampaign) {
+  return {
+    id: 1,
+    enabled: campaignValue.enabled,
+    eyebrow: campaignValue.eyebrow,
+    title: campaignValue.title,
+    description: campaignValue.description,
+    button_label: campaignValue.buttonLabel,
+    start_at: campaignValue.startAt,
+    end_at: campaignValue.endAt,
+  };
+}
+
+function isProduct(value: unknown): value is Record<string, unknown> {
   if (!value || typeof value !== 'object') return false;
-  const product = value as Partial<Product>;
-  return typeof product.id === 'number'
-    && typeof product.slug === 'string'
-    && typeof product.name === 'string'
-    && typeof product.category === 'string'
-    && typeof product.collection === 'string'
-    && typeof product.price === 'number'
-    && typeof product.fabric === 'string'
-    && typeof product.color === 'string'
-    && typeof product.occasion === 'string'
-    && typeof product.image === 'string'
-    && typeof product.imageAlt === 'string'
-    && typeof product.rating === 'number'
-    && typeof product.reviews === 'number';
+  const product = value as Record<string, unknown>;
+  return typeof product.id === 'number' && typeof product.slug === 'string' && typeof product.name === 'string';
 }
 
 export function ProductProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(readProducts);
-  const [campaign, setCampaign] = useState<OfferCampaign>(readCampaign);
-  const [user, setUser] = useState<StoreUser | null>(() => supabase ? null : readStorage(USER_STORAGE_KEY, null));
-  const [cart, setCart] = useState<CartItem[]>(() => readStorage(CART_STORAGE_KEY, []));
-  const [wishlist, setWishlist] = useState<number[]>(() => readStorage(WISHLIST_STORAGE_KEY, []));
+  const [products, setProducts] = useState<Product[]>([]);
+  const [campaign, setCampaign] = useState<OfferCampaign>(defaultOfferCampaign);
+  const [user, setUser] = useState<StoreUser | null>(null);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [wishlist, setWishlist] = useState<number[]>([]);
+
+  useEffect(() => {
+    ['shree-vidya-products', 'shree-vidya-offer-campaign', 'shree-vidya-user', 'shree-vidya-cart', 'shree-vidya-wishlist']
+      .forEach((key) => window.localStorage.removeItem(key));
+  }, []);
 
   useEffect(() => {
     if (!supabase) return;
@@ -111,38 +143,55 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     let active = true;
 
     supabase.from('products').select('*').then(({ data, error }) => {
-      const remoteProducts = data?.filter(isProduct) ?? [];
-      if (!error && active && data?.length && remoteProducts.length === data.length) {
+      const remoteProducts = data?.filter(isProduct).map(mapProductRow) ?? [];
+      if (!error && active && remoteProducts.length === data?.length) {
         setProducts(remoteProducts);
       }
+    });
+
+    supabase.from('offer_campaigns').select('*').eq('id', 1).maybeSingle().then(({ data, error }) => {
+      if (!error && active && data) setCampaign(mapCampaignRow(data));
     });
 
     return () => { active = false; };
   }, []);
 
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-  }, [products]);
-
-  useEffect(() => {
-    window.localStorage.setItem(CAMPAIGN_STORAGE_KEY, JSON.stringify(campaign));
-  }, [campaign]);
-
-  useEffect(() => { window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user)); }, [user]);
-  useEffect(() => { window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart)); }, [cart]);
-  useEffect(() => { window.localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlist)); }, [wishlist]);
-
   const value = useMemo<ProductContextValue>(() => ({
     products,
-    saveProduct: (product) => setProducts((current) => {
-      const exists = current.some((item) => item.id === product.id);
-      return exists ? current.map((item) => item.id === product.id ? product : item) : [product, ...current];
-    }),
-    deleteProduct: (id) => setProducts((current) => current.filter((product) => product.id !== id)),
-    resetProducts: () => setProducts(initialProducts),
+    saveProduct: async (product) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const { error } = await supabase.from('products').upsert(productToRow(product));
+      if (error) throw error;
+      setProducts((current) => {
+        const exists = current.some((item) => item.id === product.id);
+        return exists ? current.map((item) => item.id === product.id ? product : item) : [product, ...current];
+      });
+    },
+    deleteProduct: async (id) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) throw error;
+      setProducts((current) => current.filter((product) => product.id !== id));
+    },
+    resetProducts: async () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const { error } = await supabase.from('products').delete().neq('id', 0);
+      if (error) throw error;
+      setProducts([]);
+    },
     campaign,
-    saveCampaign: (nextCampaign) => setCampaign(nextCampaign),
-    resetCampaign: () => setCampaign(defaultOfferCampaign),
+    saveCampaign: async (nextCampaign) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const { error } = await supabase.from('offer_campaigns').upsert(campaignToRow(nextCampaign));
+      if (error) throw error;
+      setCampaign(nextCampaign);
+    },
+    resetCampaign: async () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const { error } = await supabase.from('offer_campaigns').delete().eq('id', 1);
+      if (error) throw error;
+      setCampaign(defaultOfferCampaign);
+    },
     user,
     login: async (email, password) => {
       if (!supabase) return { error: 'Supabase is not configured. Add the VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY environment variables.' };

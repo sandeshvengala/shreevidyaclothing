@@ -180,9 +180,9 @@ function AdminPage() {
           <div>
             <p className="section-label">Catalog management</p>
             <h2 className="mt-2 font-serif text-4xl text-deepBrown">Products & Offers</h2>
-            <p className="mt-2 text-sm text-mutedBrown">Changes are saved in this browser and appear across the storefront instantly.</p>
+            <p className="mt-2 text-sm text-mutedBrown">Changes are saved directly to the Supabase database and appear across the storefront.</p>
           </div>
-          <button className="button-secondary" onClick={() => { resetProducts(); setEditingProduct(null); }}><RotateCcw size={14} /> Reset demo products</button>
+          <button className="button-secondary" onClick={() => { resetProducts(); setEditingProduct(null); }}><RotateCcw size={14} /> Clear online products</button>
         </div>
 
         {editingProduct && (

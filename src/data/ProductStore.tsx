@@ -23,6 +23,7 @@ type ProductContextValue = {
   resetCampaign: () => void;
   user: StoreUser | null;
   login: (email: string, password: string) => Promise<{ error?: string }>;
+  signInWithGoogle: (redirectPath?: string) => Promise<{ error?: string }>;
   register: (name: string, email: string, password: string) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
   cart: CartItem[];
@@ -146,6 +147,14 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     login: async (email, password) => {
       if (!supabase) return { error: 'Supabase is not configured. Add the VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY environment variables.' };
       const { error } = await supabase.auth.signInWithPassword({ email, password });
+      return error ? { error: error.message } : {};
+    },
+    signInWithGoogle: async (redirectPath = '/account') => {
+      if (!supabase) return { error: 'Supabase is not configured. Add the VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY environment variables.' };
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}${redirectPath}` },
+      });
       return error ? { error: error.message } : {};
     },
     register: async (name, email, password) => {

@@ -3,8 +3,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useProducts } from '../../data/ProductStore';
 import { authConfigured } from '../../lib/supabase';
 
+function GoogleIcon() {
+  return <span aria-hidden="true" className="text-base font-bold normal-case">G</span>;
+}
+
 function RegisterPage() {
-  const { register } = useProducts();
+  const { register, signInWithGoogle } = useProducts();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -18,6 +22,11 @@ function RegisterPage() {
     navigate(destination, { replace: true });
   };
 
+  const handleGoogleSignup = async () => {
+    const result = await signInWithGoogle(destination);
+    if (result.error) setError(result.error);
+  };
+
   return (
     <div className="container-shell py-16">
       <div className="mx-auto max-w-md border border-[#eadbc7] bg-white p-8 shadow-luxury">
@@ -29,6 +38,7 @@ function RegisterPage() {
           <input required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="Email address" className="h-12 w-full border border-[#e3d5c7] px-4" />
           <input required minLength={6} type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} placeholder="Password (6+ characters)" className="h-12 w-full border border-[#e3d5c7] px-4" />
           <button type="submit" className="button-primary w-full">Register</button>
+          <button type="button" onClick={handleGoogleSignup} className="button-secondary w-full"><GoogleIcon /> Continue with Google</button>
           {error && <p className="text-sm text-maroon">{error}</p>}
           <p className="text-center text-sm text-mutedBrown">Already registered? <Link to="/login" state={{ from: destination }} className="text-gold">Sign in</Link></p>
         </form>

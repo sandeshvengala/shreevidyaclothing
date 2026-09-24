@@ -69,6 +69,24 @@ function readStorage<T>(key: string, fallback: T): T {
   }
 }
 
+function isProduct(value: unknown): value is Product {
+  if (!value || typeof value !== 'object') return false;
+  const product = value as Partial<Product>;
+  return typeof product.id === 'number'
+    && typeof product.slug === 'string'
+    && typeof product.name === 'string'
+    && typeof product.category === 'string'
+    && typeof product.collection === 'string'
+    && typeof product.price === 'number'
+    && typeof product.fabric === 'string'
+    && typeof product.color === 'string'
+    && typeof product.occasion === 'string'
+    && typeof product.image === 'string'
+    && typeof product.imageAlt === 'string'
+    && typeof product.rating === 'number'
+    && typeof product.reviews === 'number';
+}
+
 export function ProductProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>(readProducts);
   const [campaign, setCampaign] = useState<OfferCampaign>(readCampaign);
@@ -85,6 +103,20 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ? { name: session.user.user_metadata.name || session.user.email?.split('@')[0] || 'Customer', email: session.user.email || '' } : null);
     });
     return () => listener.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!supabase) return;
+    let active = true;
+
+    supabase.from('products').select('*').then(({ data, error }) => {
+      const remoteProducts = data?.filter(isProduct) ?? [];
+      if (!error && active && data?.length && remoteProducts.length === data.length) {
+        setProducts(remoteProducts);
+      }
+    });
+
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -112,12 +144,12 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     resetCampaign: () => setCampaign(defaultOfferCampaign),
     user,
     login: async (email, password) => {
-      if (!supabase) return { error: 'Supabase is not configured. Add the VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.' };
+      if (!supabase) return { error: 'Supabase is not configured. Add the VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY environment variables.' };
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       return error ? { error: error.message } : {};
     },
     register: async (name, email, password) => {
-      if (!supabase) return { error: 'Supabase is not configured. Add the VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.' };
+      if (!supabase) return { error: 'Supabase is not configured. Add the VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY environment variables.' };
       const { error } = await supabase.auth.signUp({ email, password, options: { data: { name } } });
       return error ? { error: error.message } : {};
     },

@@ -2,6 +2,7 @@
   "private": true,
   "type": "commonjs",
   "dependencies": {
+    "@supabase/server": "^1.8.0",
     "@supabase/supabase-js": "^2.117.1",
     "razorpay": "^2.9.8"
   }

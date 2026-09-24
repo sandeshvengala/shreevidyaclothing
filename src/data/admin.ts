@@ -6,6 +6,11 @@ export const dashboardMetrics = {
   lowStock: 12,
 };
 
+export const adminCredentials = {
+  id: import.meta.env.VITE_ADMIN_ID,
+  password: import.meta.env.VITE_ADMIN_PASSWORD,
+};
+
 export const orderStatuses = [
   'Pending',
   'Confirmed',

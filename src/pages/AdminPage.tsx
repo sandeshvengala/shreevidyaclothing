@@ -1,8 +1,11 @@
-import { ArrowUpRight, BadgeDollarSign, Check, Edit3, Package, Plus, RotateCcw, Trash2, Users, Zap } from 'lucide-react';
+import { ArrowUpRight, BadgeDollarSign, Check, Edit3, LogOut, Package, Plus, RotateCcw, Trash2, Users, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useProducts } from '../data/ProductStore';
 import type { Product } from '../data/products';
 import { defaultOfferCampaign, type OfferCampaign } from '../data/OfferCampaign';
+import { adminCredentials } from '../data/admin';
+
+const ADMIN_SESSION_KEY = 'shree-vidya-admin-session';
 
 const stats = [
   { label: 'Revenue', value: '₹4.8L', icon: BadgeDollarSign },
@@ -23,6 +26,12 @@ const emptyProduct: Product = {
 };
 
 function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() =>
+    sessionStorage.getItem(ADMIN_SESSION_KEY) === 'authenticated'
+  );
+  const [adminId, setAdminId] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   const { products, saveProduct, deleteProduct, resetProducts, campaign, saveCampaign, resetCampaign } = useProducts();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [campaignDraft, setCampaignDraft] = useState<OfferCampaign>(campaign);
@@ -51,6 +60,34 @@ function AdminPage() {
     window.setTimeout(() => setCampaignSaved(false), 2500);
   };
 
+  const handleAdminLogin = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (adminId === adminCredentials.id && adminPassword === adminCredentials.password) {
+      sessionStorage.setItem(ADMIN_SESSION_KEY, 'authenticated');
+      setIsAuthenticated(true);
+      setLoginError('');
+      return;
+    }
+    setLoginError('Invalid admin ID or password.');
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="container-shell flex min-h-[70vh] items-center justify-center py-16">
+        <form onSubmit={handleAdminLogin} className="w-full max-w-md border border-[#eadbc7] bg-white p-8 shadow-luxury">
+          <p className="section-label">Restricted area</p>
+          <h1 className="section-heading mt-3 text-4xl">Admin Login</h1>
+          <div className="mt-8 space-y-4">
+            <input required value={adminId} onChange={(event) => setAdminId(event.target.value)} placeholder="Admin ID" autoComplete="username" />
+            <input required type="password" value={adminPassword} onChange={(event) => setAdminPassword(event.target.value)} placeholder="Password" autoComplete="current-password" />
+          </div>
+          {loginError && <p className="mt-4 text-sm text-maroon">{loginError}</p>}
+          <button type="submit" className="button-primary mt-6 w-full">Sign In</button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="container-shell py-16">
       <div className="flex items-end justify-between gap-4">
@@ -58,7 +95,10 @@ function AdminPage() {
           <p className="section-label">Admin dashboard</p>
           <h1 className="section-heading mt-3">Store Overview</h1>
         </div>
-        <button className="button-primary" onClick={openNewProduct}><Plus size={15} /> Create new product</button>
+        <div className="flex flex-wrap gap-3">
+          <button className="button-primary" onClick={() => { sessionStorage.removeItem(ADMIN_SESSION_KEY); setIsAuthenticated(false); }}><LogOut size={15} /> Sign out</button>
+          <button className="button-primary" onClick={openNewProduct}><Plus size={15} /> Create new product</button>
+        </div>
       </div>
 
       <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">

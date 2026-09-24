@@ -109,6 +109,25 @@ function campaignToRow(campaignValue: OfferCampaign) {
   };
 }
 
+const apiUrl = import.meta.env.VITE_API_URL;
+const adminHeaders = {
+  'Content-Type': 'application/json',
+  'X-Admin-ID': import.meta.env.VITE_ADMIN_ID || '',
+  'X-Admin-Password': import.meta.env.VITE_ADMIN_PASSWORD || '',
+};
+
+async function adminRequest(path: string, options: RequestInit = {}) {
+  if (!apiUrl) throw new Error('Admin API is not configured.');
+  const response = await fetch(`${apiUrl}${path}`, {
+    ...options,
+    headers: { ...adminHeaders, ...options.headers },
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.error || `Admin request failed (${response.status}).`);
+  }
+}
+
 function isProduct(value: unknown): value is Record<string, unknown> {
   if (!value || typeof value !== 'object') return false;
   const product = value as Record<string, unknown>;
@@ -159,37 +178,27 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ProductContextValue>(() => ({
     products,
     saveProduct: async (product) => {
-      if (!supabase) throw new Error('Supabase is not configured.');
-      const { error } = await supabase.from('products').upsert(productToRow(product));
-      if (error) throw error;
+      await adminRequest('/api/admin/products', { method: 'POST', body: JSON.stringify(productToRow(product)) });
       setProducts((current) => {
         const exists = current.some((item) => item.id === product.id);
         return exists ? current.map((item) => item.id === product.id ? product : item) : [product, ...current];
       });
     },
     deleteProduct: async (id) => {
-      if (!supabase) throw new Error('Supabase is not configured.');
-      const { error } = await supabase.from('products').delete().eq('id', id);
-      if (error) throw error;
+      await adminRequest(`/api/admin/products/${id}`, { method: 'DELETE' });
       setProducts((current) => current.filter((product) => product.id !== id));
     },
     resetProducts: async () => {
-      if (!supabase) throw new Error('Supabase is not configured.');
-      const { error } = await supabase.from('products').delete().neq('id', 0);
-      if (error) throw error;
+      await adminRequest('/api/admin/products', { method: 'DELETE' });
       setProducts([]);
     },
     campaign,
     saveCampaign: async (nextCampaign) => {
-      if (!supabase) throw new Error('Supabase is not configured.');
-      const { error } = await supabase.from('offer_campaigns').upsert(campaignToRow(nextCampaign));
-      if (error) throw error;
+      await adminRequest('/api/admin/campaign', { method: 'POST', body: JSON.stringify(campaignToRow(nextCampaign)) });
       setCampaign(nextCampaign);
     },
     resetCampaign: async () => {
-      if (!supabase) throw new Error('Supabase is not configured.');
-      const { error } = await supabase.from('offer_campaigns').delete().eq('id', 1);
-      if (error) throw error;
+      await adminRequest('/api/admin/campaign', { method: 'DELETE' });
       setCampaign(defaultOfferCampaign);
     },
     user,

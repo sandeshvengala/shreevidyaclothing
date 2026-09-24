@@ -5,7 +5,22 @@ Run `supabase/schema.sql` in the Supabase SQL Editor. It creates the online `pro
 
 The storefront no longer reads products, offers, cart data, or wishlist data from browser `localStorage`. Existing browser keys are removed once when the app loads.
 
-The current admin ID/password screen is a frontend gate. For database writes, the admin must also have an authenticated Supabase session; never grant anonymous users write access with the publishable key.
+The admin ID/password is checked by the server API. Never grant anonymous users database write access with the publishable key.
+
+Admin product and offer writes now use the Express API. Configure these on the Render service:
+
+```text
+SUPABASE_URL=https://xzrcywybufifjxhjxcqt.supabase.co
+SUPABASE_SECRET_KEY=your-new-supabase-secret-key
+ADMIN_ID=ShreeVidhyaClothing
+ADMIN_PASSWORD=your-admin-password
+```
+
+Enable Google in Supabase under Authentication > Providers and add the OAuth callback URL:
+
+```text
+https://xzrcywybufifjxhjxcqt.supabase.co/auth/v1/callback
+```
 # Deployment
 
 ## Vercel

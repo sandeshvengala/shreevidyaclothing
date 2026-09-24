@@ -33,6 +33,14 @@ async function requireUser(req, res, next) {
   next();
 }
 
+function requireAdmin(req, res, next) {
+  if (!supabaseAdmin) return res.status(503).json({ error: 'Supabase server configuration is missing.' });
+  if (req.headers['x-admin-id'] !== process.env.ADMIN_ID || req.headers['x-admin-password'] !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Admin authentication required.' });
+  }
+  next();
+}
+
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, message: 'Shree Vidya Clothing API is running.', paymentsConfigured: Boolean(razorpay) });
 });
@@ -69,6 +77,36 @@ app.get('/api/admin/overview', (req, res) => {
       { id: '#1002', customer: 'Nisha M.', total: '₹12,400', status: 'Shipped' },
     ]
   });
+});
+
+app.post('/api/admin/products', requireAdmin, async (req, res) => {
+  const { data, error } = await supabaseAdmin.from('products').upsert(req.body).select().single();
+  if (error) return res.status(400).json({ error: error.message });
+  res.json(data);
+});
+
+app.delete('/api/admin/products/:id', requireAdmin, async (req, res) => {
+  const { error } = await supabaseAdmin.from('products').delete().eq('id', Number(req.params.id));
+  if (error) return res.status(400).json({ error: error.message });
+  res.status(204).end();
+});
+
+app.delete('/api/admin/products', requireAdmin, async (req, res) => {
+  const { error } = await supabaseAdmin.from('products').delete().neq('id', 0);
+  if (error) return res.status(400).json({ error: error.message });
+  res.status(204).end();
+});
+
+app.post('/api/admin/campaign', requireAdmin, async (req, res) => {
+  const { data, error } = await supabaseAdmin.from('offer_campaigns').upsert({ id: 1, ...req.body }).select().single();
+  if (error) return res.status(400).json({ error: error.message });
+  res.json(data);
+});
+
+app.delete('/api/admin/campaign', requireAdmin, async (req, res) => {
+  const { error } = await supabaseAdmin.from('offer_campaigns').delete().eq('id', 1);
+  if (error) return res.status(400).json({ error: error.message });
+  res.status(204).end();
 });
 
 app.listen(PORT, () => {

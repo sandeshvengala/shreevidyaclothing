@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useProducts } from '../../data/ProductStore';
 
 const navItems = [
-  { label: 'Offers', to: '/#offers' },
-  { label: 'Collections', to: '/#new-arrivals' },
+  { label: 'Offers', to: '/offers' },
+  { label: 'Collections', to: '/collections' },
   { label: 'About', to: '/about' },
 ];
 

@@ -11,3 +11,9 @@ services:
         value: 5000
       - key: CLIENT_URL
         value: https://shreevidyaclothing.vercel.app
+      - key: SUPABASE_URL
+        value: https://xzrcywybufifjxhjxcqt.supabase.co
+      - key: ADMIN_ID
+        value: your-admin-id
+      - key: ADMIN_PASSWORD
+        value: set-in-render-dashboard

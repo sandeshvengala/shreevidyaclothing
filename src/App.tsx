@@ -13,6 +13,8 @@ import WishlistPage from './pages/WishlistPage';
 import SearchPage from './pages/SearchPage';
 import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
+import OffersPage from './pages/OffersPage';
+import CollectionsPage from './pages/CollectionsPage';
 
 function App() {
   return (
@@ -21,7 +23,8 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/shop" element={<Navigate to="/#new-arrivals" replace />} />
         <Route path="/product/:slug" element={<ProductPage />} />
-        <Route path="/collections" element={<Navigate to="/#new-arrivals" replace />} />
+        <Route path="/offers" element={<OffersPage />} />
+        <Route path="/collections" element={<CollectionsPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />

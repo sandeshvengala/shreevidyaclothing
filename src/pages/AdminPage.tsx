@@ -37,6 +37,7 @@ function AdminPage() {
   const [campaignDraft, setCampaignDraft] = useState<OfferCampaign>(campaign);
   const [saved, setSaved] = useState(false);
   const [campaignSaved, setCampaignSaved] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const offersCount = products.filter((product) => product.compareAtPrice || product.badge === 'SALE').length;
 
   const openNewProduct = () => setEditingProduct({ ...emptyProduct, id: Date.now() });
@@ -46,18 +47,28 @@ function AdminPage() {
   const updateCampaign = (field: keyof OfferCampaign, value: string | boolean) => {
     setCampaignDraft((current) => ({ ...current, [field]: value }));
   };
-  const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!editingProduct) return;
-    saveProduct({ ...editingProduct, slug: editingProduct.slug || editingProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') });
-    setSaved(true);
-    window.setTimeout(() => setSaved(false), 2500);
+    try {
+      setSaveError('');
+      await saveProduct({ ...editingProduct, slug: editingProduct.slug || editingProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') });
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 2500);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Unable to save product to Supabase.');
+    }
   };
-  const handleCampaignSave = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleCampaignSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    saveCampaign(campaignDraft);
-    setCampaignSaved(true);
-    window.setTimeout(() => setCampaignSaved(false), 2500);
+    try {
+      setSaveError('');
+      await saveCampaign(campaignDraft);
+      setCampaignSaved(true);
+      window.setTimeout(() => setCampaignSaved(false), 2500);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Unable to save offer to Supabase.');
+    }
   };
 
   const handleAdminLogin = (event: React.FormEvent<HTMLFormElement>) => {
@@ -215,7 +226,7 @@ function AdminPage() {
             <div className="mt-5 flex flex-wrap gap-5 text-xs uppercase tracking-[0.14em] text-deepBrown">
               {(['featured', 'newArrival', 'bestSeller'] as const).map((field) => <label key={field} className="flex items-center gap-2"><input type="checkbox" checked={Boolean(editingProduct[field])} onChange={(event) => updateField(field, event.target.checked)} className="accent-gold" /> {field === 'newArrival' ? 'New arrival' : field === 'bestSeller' ? 'Best seller' : 'Featured'}</label>)}
             </div>
-            <div className="mt-6 flex items-center gap-4"><button type="submit" className="button-primary"><Check size={15} /> Save product</button>{saved && <span className="text-sm text-maroon">Saved successfully</span>}</div>
+            <div className="mt-6 flex flex-wrap items-center gap-4"><button type="submit" className="button-primary"><Check size={15} /> Save product</button>{saved && <span className="text-sm text-maroon">Saved successfully</span>}{saveError && <span className="text-sm text-maroon">{saveError}</span>}</div>
           </form>
         )}
 

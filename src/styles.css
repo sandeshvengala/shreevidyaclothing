@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', sans-serif;
+  color: #241A15;
+  background: #FDFBF7;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(184, 138, 90, 0.08), transparent 25%),
+    #FDFBF7;
+  color: #241A15;
+  letter-spacing: 0.01em;
+}
+
+.site-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.brand-watermark {
+  position: fixed;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  width: min(58vw, 720px);
+  max-width: 90vw;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.055;
+  transform: translate(-50%, -50%);
+  filter: sepia(0.18) saturate(0.72);
+}
+
+::selection {
+  background: rgba(184, 138, 90, 0.18);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+@layer components {
+  .container-shell {
+    @apply mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8;
+  }
+
+  .announcement-bar {
+    @apply border-b border-[#7e4c42] bg-[#7B3F35];
+  }
+
+  .section-heading {
+    @apply font-serif text-[2.2rem] leading-[0.96] text-deepBrown md:text-[3.3rem];
+  }
+
+  .section-label {
+    @apply text-[0.68rem] uppercase tracking-[0.28em] text-gold;
+  }
+
+  .button-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-none border border-gold bg-gold px-6 py-3 text-[0.7rem] font-medium uppercase tracking-[0.2em] text-white transition duration-300 hover:bg-[#a97445] hover:shadow-[0_12px_24px_rgba(184,138,90,0.2)];
+  }
+
+  .button-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-none border border-[#d7c6b0] bg-transparent px-6 py-3 text-[0.7rem] font-medium uppercase tracking-[0.2em] text-deepBrown transition duration-300 hover:border-gold hover:text-gold;
+  }
+
+  .card-surface {
+    @apply border border-[#E7DDCF] bg-white/80 shadow-luxury;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .brand-watermark {
+    width: min(82vw, 440px);
+    opacity: 0.045;
+  }
+}
